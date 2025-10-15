@@ -1,0 +1,35 @@
+steps:
+- id: "Build app2 image"
+  name: "gcr.io/cloud-builders/docker"
+  args: ["build", "-t", "asia-south1-docker.pkg.dev/cog01k24f1ea555zdv7ynzthxanz5/gke-repo/app2:$SHORT_SHA", "./app2"]
+
+- id: "Push app2"
+  name: "gcr.io/cloud-builders/docker"
+  args: ["push", "asia-south1-docker.pkg.dev/cog01k24f1ea555zdv7ynzthxanz5/gke-repo/app2:$SHORT_SHA"]
+
+- id: "Build app1 image"
+  name: "gcr.io/cloud-builders/docker"
+  args: ["build", "-t", "asia-south1-docker.pkg.dev/cog01k24f1ea555zdv7ynzthxanz5/gke-repo/app1:$SHORT_SHA", "./app1"]
+
+- id: "Push app1"
+  name: "gcr.io/cloud-builders/docker"
+  args: ["push", "asia-south1-docker.pkg.dev/cog01k24f1ea555zdv7ynzthxanz5/gke-repo/app1:$SHORT_SHA"]
+
+- id: "Set kubectl context"
+  name: "gcr.io/cloud-builders/gcloud"
+  entrypoint: "bash"
+  args:
+    - "-c"
+    - |
+      gcloud container clusters get-credentials your-cluster-name --region=asia-south1 --project=cog01k24f1ea555zdv7ynzthxanz5
+
+- id: "Update k8s manifests and apply"
+  name: "gcr.io/cloud-builders/kubectl"
+  args:
+    - "apply"
+    - "-f"
+    - "kubernetes/"
+
+images:
+- "asia-south1-docker.pkg.dev/cog01k24f1ea555zdv7ynzthxanz5/gke-repo/app2:$SHORT_SHA"
+- "asia-south1-docker.pkg.dev/cog01k24f1ea555zdv7ynzthxanz5/gke-repo/app1:$SHORT_SHA"
